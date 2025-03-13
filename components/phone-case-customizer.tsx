@@ -29,14 +29,60 @@ export default function PhoneCaseCustomizer() {
   }
 
   const handleExport = () => {
-    if (!canvasRef.current) return
-
-    const link = document.createElement("a")
-    link.download = `custom-phone-case-${selectedModel}.png`
-    link.href = canvasRef.current.toDataURL("image/png")
-    link.click()
+    if (!canvasRef.current) return;
+  
+    // Crear un nuevo canvas temporal
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+  
+    if (!tempCtx) return;
+  
+    tempCanvas.width = canvasRef.current.width;
+    tempCanvas.height = canvasRef.current.height;
+  
+    const radius = 30;
+    tempCtx.beginPath();
+    tempCtx.moveTo(radius, 0);
+    tempCtx.lineTo(tempCanvas.width - radius, 0);
+    tempCtx.quadraticCurveTo(tempCanvas.width, 0, tempCanvas.width, radius);
+    tempCtx.lineTo(tempCanvas.width, tempCanvas.height - radius);
+    tempCtx.quadraticCurveTo(tempCanvas.width, tempCanvas.height, tempCanvas.width - radius, tempCanvas.height);
+    tempCtx.lineTo(radius, tempCanvas.height);
+    tempCtx.quadraticCurveTo(0, tempCanvas.height, 0, tempCanvas.height - radius);
+    tempCtx.lineTo(0, radius);
+    tempCtx.quadraticCurveTo(0, 0, radius, 0);
+    tempCtx.closePath();
+    tempCtx.clip(); // Aplica el recorte redondeado
+  
+    // Dibujar la imagen del canvas original en el nuevo canvas
+    tempCtx.drawImage(canvasRef.current, 0, 0);
+  
+    // Descargar la imagen con esquinas redondeadas y fondo transparente
+    const link = document.createElement("a");
+    link.download = `custom-phone-case-${selectedModel}.png`;
+    link.href = tempCanvas.toDataURL("image/png");
+    link.click();
+  };  
+  
+  const drawImageProperly = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, canvas: HTMLCanvasElement) => {
+    const canvasRatio = canvas.width / canvas.height
+    const imageRatio = img.width / img.height
+  
+    let drawWidth = canvas.width
+    let drawHeight = canvas.height
+  
+    if (imageRatio > canvasRatio) {
+      drawWidth = (canvas.height / img.height) * img.width
+    } else {
+      drawHeight = (canvas.width / img.width) * img.height
+    }
+  
+    const offsetX = (canvas.width - drawWidth) / 2 + imageOffsetX
+    const offsetY = (canvas.height - drawHeight) / 2 + imageOffsetY
+  
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
   }
-
+  
   // eslint-disable-next-line react-hooks/exhaustive-deps
   function renderPreview() {
     const canvas = canvasRef.current
@@ -53,23 +99,25 @@ export default function PhoneCaseCustomizer() {
   
       userImage.onload = () => {
         ctx.save()
-  
-        const centerX = canvas.width / 2 + imageOffsetX // Aplicar desplazamiento X
-        const centerY = canvas.height / 2 + imageOffsetY // Aplicar desplazamiento Y
-  
-        ctx.translate(centerX, centerY)
+        ctx.translate(canvas.width / 2, canvas.height / 2)
         ctx.rotate((imageRotation * Math.PI) / 180)
         ctx.scale(imageScale, imageScale)
-  
-        const imgWidth = userImage.width
-        const imgHeight = userImage.height
-        ctx.drawImage(userImage, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight)
-  
-        ctx.restore()
-  
-        // Dibujar la funda del teléfono después de la imagen del usuario
+        ctx.translate(-canvas.width / 2, -canvas.height / 2)
+        ctx.shadowColor = "rgba(0, 0, 0, 0.25)"
+        ctx.shadowBlur = 20
+        ctx.shadowOffsetX = 5
+        ctx.shadowOffsetY = 5
+        ctx.globalAlpha = 0.15
         drawPhoneCase(ctx, canvas)
-      }
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "#ffffff"; // Fondo blanco o cualquier color deseado
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawImageProperly(ctx, userImage, canvas)
+      
+        ctx.restore()
+        drawPhoneCase(ctx, canvas)
+      }      
     } else {
       // Si no hay imagen personalizada, solo dibujar la funda
       drawPhoneCase(ctx, canvas)
@@ -89,7 +137,6 @@ export default function PhoneCaseCustomizer() {
     }
   }
   
-
   // Resize canvas to match container size
   useEffect(() => {
     const resizeCanvas = () => {
@@ -206,7 +253,7 @@ export default function PhoneCaseCustomizer() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium flex items-center">
-                  ↕ Desplazamr Verticalmente
+                  ↕ Desplazar Verticalmente
                 </label>
                 <span className="text-sm">{imageOffsetY}px</span>
               </div>
@@ -231,8 +278,8 @@ export default function PhoneCaseCustomizer() {
       </div>
 
       <div className="flex flex-col items-center">
-        <h2 className="text-xl font-semibold mb-4">Real-time Preview</h2>
-        <div ref={containerRef} className="w-full z-index-100 max-w-[300px] mx-auto border overflow-hidden bg-gray-100" style={{ borderRadius: "25px" }}>
+        <h2 className="text-xl font-semibold mb-4">¡Mira el Resultado 🙀!</h2>
+        <div ref={containerRef} className="w-full z-index-100 p-6 max-w-[300px] mx-auto border overflow-hidden bg-white" style={{ borderRadius: "30px" }}>
           <canvas ref={canvasRef} className="w-full" />
         </div>
         <p className="text-sm text-muted-foreground mt-2 text-center">
