@@ -81,6 +81,11 @@ export interface PhoneCaseModel {
       imageUrl: "/cases/Google-pixel-7A.png",
     },
     {
+      id: "xiaomi-redmi-note-9-pro",
+      name: "Xiaomi Redmi Note 9 Pro",
+      imageUrl: "/cases/Xiaomi-redmi-note-9-pro.png",
+    },
+    {
       id: "xiaomi-redmi-note-10",
       name: "Xiaomi Redmi Note 10",
       imageUrl: "/cases/Xiaomi-redmi-note-10.png",
@@ -124,6 +129,11 @@ export interface PhoneCaseModel {
       id: "motorola-one-vision",
       name: "Motorola One Vision",
       imageUrl: "/cases/Motorola-one-vision.png",
+    },
+    {
+      id: "motorola-one-zoom",
+      name: "Motorola One Zoom",
+      imageUrl: "/cases/Motorola-one-zoom.png",
     },
     {
       id: "motorola-g84",
